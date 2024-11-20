@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>العد التنازلي - ثانوية عامة</title>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            direction: rtl;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            transition: background 1s ease, color 1s ease;
+        }
+
+        body.day-mode {
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            color: white;
+        }
+
+        body.night-mode {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: #ecf0f1;
+        }
+
+        header {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            font-size: 16px;
+            border-bottom: 4px solid #e74c3c;
+            width: 100%;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            z-index: 10;
+        }
+
+        .container {
+            width: 85%;
+            max-width: 450px;
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .timer {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease-in-out;
+            margin: 0 auto;
+        }
+
+        .timer:hover {
+            transform: scale(1.05);
+        }
+
+        footer {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            text-align: center;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .end-message {
+            font-size: 18px;
+            color: #f39c12;
+            padding: 8px;
+            display: none;
+            animation: fadeIn 3s ease-out forwards;
+        }
+
+        .tip {
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+            animation: fadeIn 3s ease-out forwards;
+        }
+
+        .share {
+            margin-top: 12px;
+        }
+
+        .share button {
+            background-color: #3498db;
+            color: white;
+            padding: 6px 12px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out, transform 0.2s;
+        }
+
+        .share button:hover {
+            background-color: #2980b9;
+        }
+
+        .share button:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="day-mode">
+
+    <header>
+        <h1>ثانوية عامة</h1>
+    </header>
+
+    <div class="container">
+        <h2>العد التنازلي لامتحانات الثانوية العامة</h2>
+        <div id="timer" class="timer"></div>
+        <div id="endMessage" class="end-message">تم بدء الامتحانات! حظاً موفقاً!</div>
+        <div id="tipMessage" class="tip"></div>
+        <div class="share">
+            <button onclick="shareCountdown()">شارك العد التنازلي</button>
+        </div>
+        <div class="share">
+            <button onclick="toggleMode()">تغيير الوضع</button>
+        </div>
+        <div class="share">
+            <button onclick="toggleAudio()">تشغيل الصوت</button>
+        </div>
+    </div>
+
+    <footer></footer>
+
+    <audio id="audio" src="https://www.dropbox.com/scl/fi/oq77yc0j6o8k7nrq1nuag/yo-online-audio-converter.com.mp3?rlkey=ggm9ul6p1xnxhg3wb6eomefjo&dl=1"></audio>
+
+    <script>
+        // تاريخ الامتحانات
+        const examDate = new Date("2025-06-14T09:00:00").getTime();
+
+        // رسائل التحفيز
+        const tips = [
+            "قوم ذاكر المتراكم يا أهبل",
+            "يا متسرع يا اهوج",
+            "اعمل كده وخليك مركز يا فاشل",
+            "مفيش امتحان من غير مذاكرة يا أهبل",
+            "يا خايب، امسك الكتاب هاتحصن",
+            "مفيش حاجة سهلة يا زعتر",
+            "يا مغمض، افتح عينك وحل واجبك",
+            "المذاكرة مش هتكمل لو مش مركز يا عديم التركيز",
+            "لو مش هتذاكر دلوقتي هتسقط يا غبي",
+            "مذاكرة في وقتها بتفرق كتير، ركز",
+            "مش هتنجح لو مفيش جهد يا فاشل",
+            "الوقت مش هيتأجل عشانك يا متهاون",
+            "الامتحان مش هيتأجل علشانك يا أهبل",
+            "خلي بالك مش هتحصل على درجات بسهولة يا شاطر",
+            "عايز تنجح؟ ابدأ ذاكر دلوقتي",
+            "الوقت بيعدي وانت مش حاسس، قوم ذاكر",
+            "المذاكرة مش سهلة، بس لازم تكمل",
+            "افتح الكتاب مش هينفع التسكع",
+            "امتحانك هيكون على قد جهدك، مش تهاونك",
+            "مفيش حاجة بتيجي بسهولة يا فاشل",
+            "هو أنت فاضي كده يا فالح؟ افتح الكتاب",
+            "الوقت مش هيقف علشانك، خد بالك",
+            "مفيش حاجة اسمها تاخير، قوم ذاكر من دلوقتي",
+            "ماشي يا عم، أنا مش هتكلم بس قوم ذاكر",
+            "هو أنت أهبل يعني جاي تشوف الهبل ده وسايب المذاكرة؟",
+            "يا جدع لو متأكد إنك هتنجح من غير مذاكرة قولي علشان أباركلك !"
+        ];
+        let currentTipIndex = 0;
+
+        // تحديث المؤقت
+        function updateTimer() {
+            const now = new Date().getTime();
+            const timeLeft = examDate - now;
+
+            if (timeLeft <= 0) {
+                document.getElementById('timer').style.display = "none";
+                document.getElementById('endMessage').style.display = "block";
+                clearInterval(timerInterval);
+                return;
+            }
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            document.getElementById('timer').innerHTML = `${days} أيام ${hours} ساعات ${minutes} دقائق ${seconds} ثواني`;
+        }
+
+        // تغيير النصوص
+        function changeTip() {
+            if (currentTipIndex < tips.length) {
+                document.getElementById('tipMessage').style.display = "block";
+                document.getElementById('tipMessage').innerText = tips[currentTipIndex++];
+            } else {
+                currentTipIndex = 0;
+            }
+        }
+
+        // زر المشاركة
+        function shareCountdown() {
+            const text = "تابع العد التنازلي لامتحانات الثانوية العامة! 💪";
+            if (navigator.share) {
+                navigator.share({
+                    title: "العد التنازلي",
+                    text: text,
+                    url: window.location.href,
+                });
+            } else {
+                alert("خاصية المشاركة غير مدعومة على هذا المتصفح.");
+            }
+        }
+
+        // وضع النهار والليل
+        function toggleMode() {
+            const body = document.body;
+            body.classList.toggle("day-mode");
+            body.classList.toggle("night-mode");
+        }
+
+        // تشغيل ووقف الصوت
+        let audio = document.getElementById("audio");
+        let audioPlaying = false;
+
+        function toggleAudio() {
+            if (audioPlaying) {
+                audio.pause();
+                audio.currentTime = 0; // إعادة الصوت إلى البداية
+                document.querySelector('button[onclick="toggleAudio()"]').innerText = "تشغيل الصوت";
+            } else {
+                audio.play();
+                document.querySelector('button[onclick="toggleAudio()"]').innerText = "إيقاف الصوت";
+            }
+            audioPlaying = !audioPlaying;
+        }
+
+        const timerInterval = setInterval(updateTimer, 1000);
+        setInterval(changeTip, 5000);
+    </script>
+</body>
+</html>
